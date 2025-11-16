@@ -1,0 +1,124 @@
+name: ML Models CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-dev.txt
+      
+      - name: Code formatting check (Black)
+        run: black --check src/ tests/
+      
+      - name: Linting (Flake8)
+        run: flake8 src/ tests/ --max-line-length=100
+      
+      - name: Type checking (MyPy)
+        run: mypy src/ --ignore-missing-imports
+
+  test-cnn-model:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run CNN tests
+        run: pytest tests/test_cnn.py -v --cov=src.models.cnn_classifier
+      
+      - name: Validate CNN model performance
+        run: |
+          python -c "
+          from src.models.cnn_classifier import CNNClassifier
+          from src.utils.metrics import validate_model_threshold
+          
+          # 快速訓練和驗證
+          model = CNNClassifier({...})
+          metrics = model.evaluate(test_data)
+          assert metrics['accuracy'] > 0.90  # 最低準確率門檻
+          "
+
+  test-rag-system:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run RAG tests
+        run: pytest tests/test_rag.py -v --cov=src.models.rag_system
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      
+      - name: Validate RAG retrieval quality
+        run: |
+          python -c "
+          from src.models.rag_system import RAGSystem
+          
+          rag = RAGSystem({...})
+          metrics = rag.evaluate(test_queries)
+          assert metrics['retrieval_precision'] > 0.80
+          "
+
+  integration-tests:
+    needs: [test-cnn-model, test-rag-system]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      
+      - name: Run integration tests
+        run: pytest tests/test_integration.py -v
+      
+      - name: Generate coverage report
+        run: |
+          pytest --cov=src --cov-report=xml --cov-report=html
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+
+  docker-build:
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker image
+        run: docker build -t ml-cicd-showcase:${{ github.sha }} .
+      
+      - name: Test Docker image
+        run: |
+          docker run ml-cicd-showcase:${{ github.sha }} pytest tests/
