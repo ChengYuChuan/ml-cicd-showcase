@@ -1,8 +1,8 @@
 # ML CI/CD Showcase
 
-[![CI/CD Pipeline](https://github.com/yourusername/ml-cicd-showcase/workflows/ML%20Models%20CI/CD%20Pipeline/badge.svg)](https://github.com/yourusername/ml-cicd-showcase/actions)
-[![codecov](https://codecov.io/gh/yourusername/ml-cicd-showcase/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/ml-cicd-showcase)
-[![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
+[![CI/CD Pipeline](https://github.com/ChengYuChuan/ml-cicd-showcase/workflows/ML%20Models%20CI/CD%20Pipeline/badge.svg)](https://github.com/ChengYuChuan/ml-cicd-showcase/actions)
+[![codecov](https://codecov.io/gh/ChengYuChuan/ml-cicd-showcase/branch/main/graph/badge.svg)](https://codecov.io/gh/ChengYuChuan/ml-cicd-showcase)
+[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A professional showcase project demonstrating **ML/MLOps skills** with a **unified CI/CD pipeline** for multiple model types.
@@ -366,9 +366,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ## 👤 Author
 
 **Your Name**
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Name](https://linkedin.com/in/yourprofile)
-- Email: your.email@example.com
+- GitHub: [@ChengYuChuan](https://github.com/ChengYuChuan)
+- LinkedIn: [ChengYuChuan](https://www.linkedin.com/in/yu-chuan-cheng-496069bb/)
+- Email: ChengYuChuan82@gmail.com
 
 ---
 

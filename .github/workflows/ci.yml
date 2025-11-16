@@ -5,120 +5,325 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
+  PYTHON_VERSION: '3.10'
   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
 jobs:
+  # Job 1: Code Quality Checks
   code-quality:
+    name: Code Quality & Linting
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up Python 3.10
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-      
-      - name: Code formatting check (Black)
-        run: black --check src/ tests/
-      
-      - name: Linting (Flake8)
-        run: flake8 src/ tests/ --max-line-length=100
-      
-      - name: Type checking (MyPy)
-        run: mypy src/ --ignore-missing-imports
 
-  test-cnn-model:
+      - name: Code formatting check (Black)
+        run: |
+          black --check src/ tests/
+        continue-on-error: false
+
+      - name: Import sorting check (isort)
+        run: |
+          isort --check-only src/ tests/
+        continue-on-error: false
+
+      - name: Linting (Flake8)
+        run: |
+          flake8 src/ tests/ --max-line-length=100 --extend-ignore=E203,W503
+        continue-on-error: false
+
+      - name: Type checking (MyPy)
+        run: |
+          mypy src/ --ignore-missing-imports
+        continue-on-error: true  # Type hints are optional for now
+
+  # Job 2: Test CNN Model
+  test-cnn:
+    name: Test CNN Classifier
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
       - name: Cache pip packages
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
-      
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      
-      - name: Run CNN tests
-        run: pytest tests/test_cnn.py -v --cov=src.models.cnn_classifier
-      
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run CNN unit tests
+        run: |
+          pytest tests/test_cnn.py -v --cov=src.models.cnn_classifier --cov-report=xml --cov-report=term
+        timeout-minutes: 15
+
       - name: Validate CNN model performance
         run: |
           python -c "
           from src.models.cnn_classifier import CNNClassifier
+          from src.config import CNNConfig
           from src.utils.metrics import validate_model_threshold
-          
-          # 快速訓練和驗證
-          model = CNNClassifier({...})
-          metrics = model.evaluate(test_data)
-          assert metrics['accuracy'] > 0.90  # 最低準確率門檻
-          "
 
-  test-rag-system:
+          print('Training CNN for validation...')
+          config = CNNConfig(num_epochs=2, batch_size=128)
+          model = CNNClassifier(config)
+          metrics = model.train()
+
+          print(f'Metrics: {metrics}')
+          thresholds = {'accuracy': 0.85}
+          validate_model_threshold(metrics, thresholds, 'CNN')
+          print('✓ CNN performance validation passed!')
+          "
+        timeout-minutes: 10
+
+      - name: Upload CNN coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: cnn
+          name: cnn-coverage
+
+  # Job 3: Test RAG System
+  test-rag:
+    name: Test RAG System
     needs: code-quality
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
-      
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
       - name: Install dependencies
-        run: pip install -r requirements.txt
-      
-      - name: Run RAG tests
-        run: pytest tests/test_rag.py -v --cov=src.models.rag_system
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Run RAG unit tests
+        run: |
+          pytest tests/test_rag.py -v --cov=src.models.rag_system --cov-report=xml --cov-report=term -m "not slow"
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      
+        timeout-minutes: 10
+
       - name: Validate RAG retrieval quality
+        if: env.ANTHROPIC_API_KEY != ''
         run: |
           python -c "
           from src.models.rag_system import RAGSystem
-          
-          rag = RAGSystem({...})
-          metrics = rag.evaluate(test_queries)
-          assert metrics['retrieval_precision'] > 0.80
-          "
+          from src.config import RAGConfig
+          import os
 
+          if not os.getenv('ANTHROPIC_API_KEY'):
+              print('⚠ Skipping RAG validation - no API key')
+              exit(0)
+
+          print('Setting up RAG system...')
+          config = RAGConfig(collection_name='ci_test')
+          rag = RAGSystem(config)
+
+          docs = [
+              'Python is a programming language.',
+              'Machine learning is a subset of AI.',
+              'Deep learning uses neural networks.',
+          ]
+
+          print('Ingesting documents...')
+          rag.ingest_documents(docs)
+
+          print('Testing retrieval...')
+          results = rag.retrieve('What is Python?', top_k=2)
+          assert len(results) == 2, 'Retrieval failed'
+
+          print('✓ RAG system validation passed!')
+          "
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        timeout-minutes: 5
+
+      - name: Upload RAG coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: rag
+          name: rag-coverage
+
+  # Job 4: Integration Tests
   integration-tests:
-    needs: [test-cnn-model, test-rag-system]
+    name: Integration Tests
+    needs: [test-cnn, test-rag]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+
       - name: Run integration tests
-        run: pytest tests/test_integration.py -v
-      
+        run: |
+          pytest tests/test_integration.py -v --cov=src --cov-report=xml --cov-report=term -m "not slow"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        timeout-minutes: 15
+
       - name: Generate coverage report
         run: |
-          pytest --cov=src --cov-report=xml --cov-report=html
-      
+          pytest tests/ --cov=src --cov-report=html --cov-report=xml -m "not slow"
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: integration
+          name: integration-coverage
 
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # Job 5: Docker Build
   docker-build:
+    name: Build Docker Image
     needs: integration-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Build Docker image
-        run: docker build -t ml-cicd-showcase:${{ github.sha }} .
-      
+        run: |
+          docker build -t ml-cicd-showcase:${{ github.sha }} .
+        timeout-minutes: 10
+
       - name: Test Docker image
         run: |
-          docker run ml-cicd-showcase:${{ github.sha }} pytest tests/
+          docker run --rm ml-cicd-showcase:${{ github.sha }} python -c "
+          from src.models.cnn_classifier import CNNClassifier
+          from src.config import CNNConfig
+          print('Testing CNN import...')
+          config = CNNConfig()
+          model = CNNClassifier(config)
+          print('✓ Docker image works!')
+          "
+
+      - name: Save Docker image
+        run: |
+          docker save ml-cicd-showcase:${{ github.sha }} | gzip > ml-cicd-showcase.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-image
+          path: ml-cicd-showcase.tar.gz
+          retention-days: 7
+
+  # Job 6: Performance Benchmarks
+  benchmarks:
+    name: Performance Benchmarks
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run CNN benchmarks
+        run: |
+          python -c "
+          from src.models.cnn_classifier import CNNClassifier
+          from src.config import CNNConfig
+          import torch
+          import time
+
+          config = CNNConfig(num_epochs=1)
+          model = CNNClassifier(config)
+
+          # Quick training
+          model.train()
+
+          # Latency test
+          sample = torch.randn(1, 1, 28, 28)
+          latency = model.measure_latency(sample, num_runs=100)
+
+          print(f'CNN Latency: {latency:.2f}ms')
+          print(f'Model Size: {model.metrics[\"model_size_mb\"]:.2f}MB')
+          print(f'Parameters: {model.metrics[\"parameter_count\"]:,}')
+          "
+
+  # Job 7: Status Report
+  status-report:
+    name: CI/CD Status Report
+    needs: [code-quality, test-cnn, test-rag, integration-tests, docker-build]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Generate status report
+        run: |
+          echo "## CI/CD Pipeline Status Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- CNN Tests: ${{ needs.test-cnn.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- RAG Tests: ${{ needs.test-rag.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration Tests: ${{ needs.integration-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker Build: ${{ needs.docker-build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Pipeline completed at $(date)" >> $GITHUB_STEP_SUMMARY

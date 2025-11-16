@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Development environment
+  ml-dev:
+    build:
+      context: .
+      target: development
+    container_name: ml-cicd-dev
+    volumes:
+      - .:/app
+      - ml-cache:/root/.cache
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONPATH=/app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+
+  # Testing environment
+  ml-test:
+    build:
+      context: .
+      target: base
+    container_name: ml-cicd-test
+    volumes:
+      - .:/app
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - PYTHONPATH=/app
+    command: pytest tests/ -v
+
+  # Production environment
+  ml-prod:
+    build:
+      context: .
+      target: production
+    container_name: ml-cicd-prod
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+
+volumes:
+  ml-cache:
