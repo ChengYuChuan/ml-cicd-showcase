@@ -113,13 +113,17 @@ class BaseMLModel(ABC):
         Returns:
             float: Average latency in milliseconds
         """
+        import time
+        
         latencies = []
         for _ in range(num_runs):
-            start_time = time.time()
+            start_time = time.perf_counter()
             self.predict(input_data)
-            latency = (time.time() - start_time) * 1000  # Convert to ms
+            latency = (time.perf_counter() - start_time) * 1000  # Convert to ms
             latencies.append(latency)
-        return sum(latencies) / len(latencies)
+        
+        avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
+        return round(avg_latency, 4) # 4 decimal places
 
     def _save_metadata(self, path: Path) -> None:
         """Save model metadata to JSON."""

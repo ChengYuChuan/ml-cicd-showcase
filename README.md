@@ -2,7 +2,7 @@
 
 [![CI/CD Pipeline](https://github.com/ChengYuChuan/ml-cicd-showcase/workflows/ML%20Models%20CI/CD%20Pipeline/badge.svg)](https://github.com/ChengYuChuan/ml-cicd-showcase/actions)
 [![codecov](https://codecov.io/gh/ChengYuChuan/ml-cicd-showcase/branch/main/graph/badge.svg)](https://codecov.io/gh/ChengYuChuan/ml-cicd-showcase)
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 A professional showcase project demonstrating **ML/MLOps skills** with a **unified CI/CD pipeline** for multiple model types.
