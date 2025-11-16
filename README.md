@@ -52,7 +52,7 @@ This project demonstrates:
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/ml-cicd-showcase.git
+git clone https://github.com/ChengYuChuan/ml-cicd-showcase.git
 cd ml-cicd-showcase
 
 # Create virtual environment

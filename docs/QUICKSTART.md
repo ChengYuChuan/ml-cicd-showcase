@@ -12,7 +12,7 @@ This guide will get you up and running with the ML CI/CD Showcase in under 10 mi
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ml-cicd-showcase.git
+git clone https://github.com/ChengYuChuan/ml-cicd-showcase.git
 cd ml-cicd-showcase
 
 # Create virtual environment
