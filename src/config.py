@@ -1,4 +1,5 @@
 """Configuration management for ML models."""
+
 import os
 from dataclasses import dataclass
 from pathlib import Path

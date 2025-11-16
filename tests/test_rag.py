@@ -1,4 +1,5 @@
 """Tests for RAG system."""
+
 import os
 
 import pytest
@@ -22,9 +23,7 @@ class TestRAGSystem:
 
     def test_document_ingestion(self, sample_documents, anthropic_api_key):
         """Test document ingestion."""
-        config = RAGConfig(
-            anthropic_api_key=anthropic_api_key, collection_name="test_ingestion"
-        )
+        config = RAGConfig(anthropic_api_key=anthropic_api_key, collection_name="test_ingestion")
         rag = RAGSystem(config)
 
         metrics = rag.ingest_documents(sample_documents)

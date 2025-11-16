@@ -1,4 +1,5 @@
 """Integration tests for the unified ML framework."""
+
 import pytest
 
 from src.config import CNNConfig, RAGConfig
@@ -118,9 +119,7 @@ class TestCrossModelComparison:
         assert cnn_latency > 0
 
         # RAG latency (just check the method exists and works with a query)
-        rag_config = RAGConfig(
-            anthropic_api_key=anthropic_api_key, collection_name="latency_test"
-        )
+        rag_config = RAGConfig(anthropic_api_key=anthropic_api_key, collection_name="latency_test")
         rag = RAGSystem(rag_config)
         rag.ingest_documents(["test document"])
 
@@ -226,9 +225,7 @@ class TestEndToEnd:
 
         # Test with RAG
         print("\n--- Testing RAG Pipeline ---")
-        rag_config = RAGConfig(
-            anthropic_api_key=anthropic_api_key, collection_name="e2e_test"
-        )
+        rag_config = RAGConfig(anthropic_api_key=anthropic_api_key, collection_name="e2e_test")
         rag = RAGSystem(rag_config)
 
         # Train (ingest)

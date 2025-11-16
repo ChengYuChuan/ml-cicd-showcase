@@ -1,4 +1,5 @@
 """Tests for CNN classifier."""
+
 import pytest
 import torch
 
@@ -41,6 +42,7 @@ class TestTinyConvNet:
         assert param_count < 150_000, f"Model too large: {param_count} parameters"  # 改為 150K
         assert param_count > 10_000, f"Model too small: {param_count} parameters"
         print(f"✓ Model has {param_count:,} parameters")
+
 
 class TestCNNClassifier:
     """Test the CNN classifier wrapper."""
