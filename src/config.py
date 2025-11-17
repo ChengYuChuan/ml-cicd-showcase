@@ -72,5 +72,5 @@ def load_config(config_path: Optional[Path] = None) -> dict:
 
     if config_path.exists():
         with open(config_path, "r") as f:
-            return yaml.safe_load(f)
+            return yaml.safe_load(f) or {}
     return {}

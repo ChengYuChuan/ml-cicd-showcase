@@ -154,7 +154,7 @@ class CNNClassifier(BaseMLModel):
                     {"loss": f"{loss.item():.4f}", "acc": f"{100.*correct/total:.2f}%"}
                 )
 
-            avg_loss = epoch_loss / len(train_loader)
+            avg_loss = epoch_loss / len(train_loader) if train_loader else 0.0
             train_acc = correct / total
             print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}, Accuracy={train_acc:.4f}")
 
@@ -178,7 +178,8 @@ class CNNClassifier(BaseMLModel):
             Dict with evaluation metrics
         """
         _, test_loader = self._get_data_loaders(train=False)
-
+        if test_loader is None:
+            return {}
         self.model.eval()
         correct = 0
         total = 0
@@ -196,7 +197,7 @@ class CNNClassifier(BaseMLModel):
                 correct += predicted.eq(target).sum().item()
 
         accuracy = correct / total
-        avg_loss = test_loss / len(test_loader)
+        avg_loss = test_loss / len(test_loader) if test_loader else 0.0
 
         metrics = {
             "accuracy": accuracy,
@@ -224,7 +225,7 @@ class CNNClassifier(BaseMLModel):
                 input_data = input_data.to(self.device)
             output = self.model(input_data)
             _, predicted = output.max(1)
-        return predicted
+        return predicted # type: ignore[no-any-return]
 
     def _get_model_size_mb(self) -> float:
         """Calculate model size in MB."""
