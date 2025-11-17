@@ -225,7 +225,7 @@ class CNNClassifier(BaseMLModel):
                 input_data = input_data.to(self.device)
             output = self.model(input_data)
             _, predicted = output.max(1)
-        return predicted # type: ignore[no-any-return]
+        return predicted  # type: ignore[no-any-return]
 
     def _get_model_size_mb(self) -> float:
         """Calculate model size in MB."""

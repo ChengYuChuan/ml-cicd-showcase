@@ -96,7 +96,7 @@ class RAGSystem(BaseMLModel):
         self.collection.add(
             embeddings=embeddings.tolist(),
             documents=documents,
-            metadatas=metadata, # type: ignore
+            metadatas=metadata,  # type: ignore
             ids=ids
         )
 
@@ -163,13 +163,13 @@ class RAGSystem(BaseMLModel):
         """
 
         # Call Claude API
-        message = self.claude.messages.create( # type: ignore
+        message = self.claude.messages.create(  # type: ignore
             model=self.config.claude_model,
             max_tokens=self.config.max_tokens,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        return message.content[0].text # type: ignore
+        return message.content[0].text  # type: ignore
 
     def predict(self, query: str) -> Dict[str, Any]:
         """
