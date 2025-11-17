@@ -43,11 +43,23 @@ def sample_batch():
 def sample_documents():
     """Sample documents for RAG testing."""
     return [
-        "Python is a high-level programming language known for its simplicity and readability.",
-        "Machine learning is a subset of artificial intelligence that focuses on data and algorithms.",
-        "Deep learning uses neural networks with multiple layers to learn from large amounts of data.",
-        "Natural language processing enables computers to understand and generate human language.",
-        "Computer vision allows machines to interpret and understand visual information from the world.",
+        ("Python is a high-level programming language" "known for its simplicity and readability."),
+        (
+            "Machine learning is a subset of artificial"
+            "intelligence that focuses on data and algorithms."
+        ),
+        (
+            "Deep learning uses neural networks with multiple"
+            "layers to learn from large amounts of data."
+        ),
+        (
+            "Natural language processing enables computers to"
+            "understand and generate human language."
+        ),
+        (
+            "Computer vision allows machines to interpret and"
+            "understand visual information from the world."
+        ),
     ]
 
 

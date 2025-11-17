@@ -50,7 +50,9 @@ class RAGSystem(BaseMLModel):
 
         self._is_trained = False  # RAG is "trained" when documents are ingested
 
-    def train(self, documents: List[str], metadata: Optional[List[dict]] = None) -> Dict[str, float]:
+    def train(
+            self, documents: List[str], metadata: Optional[List[dict]] = None
+    ) -> Dict[str, float]:
         """
         'Train' the RAG system by ingesting documents.
 
@@ -92,7 +94,9 @@ class RAGSystem(BaseMLModel):
         # Add to ChromaDB
         ids = [f"doc_{i}" for i in range(len(documents))]
         self.collection.add(
-            embeddings=embeddings.tolist(), documents=documents, metadatas=metadata, ids=ids
+            embeddings=embeddings.tolist(),
+            documents=documents,
+            metadatas=metadata, ids=ids
         )
 
         ingestion_time = time.time() - start_time
@@ -141,16 +145,21 @@ class RAGSystem(BaseMLModel):
             Generated answer
         """
         # Construct prompt
-        context_text = "\n\n".join(f"Document {i+1}:\n{doc}" for i, doc in enumerate(context))
+        context_text = "\n\n".join(
+            f"Document {i+1}:\n{doc}" for i, doc in enumerate(context)
+        )
 
-        prompt = f"""Based on the following context documents, please answer the question. If the answer cannot be found in the context, say so.
+        prompt = f"""
+        Based on the following context documents, please answer the question.
+        If the answer cannot be found in the context, say so.
 
-Context:
-{context_text}
+        Context:
+        {context_text}
 
-Question: {query}
+        Question: {query}
 
-Answer:"""
+        Answer:
+        """
 
         # Call Claude API
         message = self.claude.messages.create(
@@ -207,7 +216,11 @@ Answer:"""
             # Calculate precision
             retrieved_set = set(retrieved_docs)
             expected_set = set(expected_docs)
-            precision = len(retrieved_set & expected_set) / len(retrieved_set) if retrieved_set else 0
+            precision = (
+                len(retrieved_set & expected_set) / len(retrieved_set)
+                if retrieved_set
+                else 0
+            )
 
             precision_scores.append(precision)
             latencies.append(latency)

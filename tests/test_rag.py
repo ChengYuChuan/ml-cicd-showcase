@@ -6,7 +6,6 @@ import pytest
 
 from src.config import RAGConfig
 from src.models.rag_system import RAGSystem
-from src.utils.metrics import validate_model_threshold
 
 
 class TestRAGSystem:

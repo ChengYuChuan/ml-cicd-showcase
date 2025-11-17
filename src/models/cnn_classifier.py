@@ -1,6 +1,6 @@
 """Lightweight CNN classifier for MNIST - CI/CD friendly."""
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import torch
 import torch.nn as nn
@@ -129,7 +129,6 @@ class CNNClassifier(BaseMLModel):
         train_loader, test_loader = self._get_data_loaders(train=True)
 
         self.model.train()
-        total_loss = 0.0
 
         for epoch in range(epochs):
             epoch_loss = 0.0

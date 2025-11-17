@@ -1,9 +1,8 @@
 """Abstract base class for all ML models."""
 import json
-import time
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 
 class BaseMLModel(ABC):
@@ -113,16 +112,15 @@ class BaseMLModel(ABC):
             float: Average latency in milliseconds
         """
         import time
-        
         latencies = []
         for _ in range(num_runs):
             start_time = time.perf_counter()
             self.predict(input_data)
-            latency = (time.perf_counter() - start_time) * 1000  # Convert to ms
+            latency = (time.perf_counter() - start_time) * 1000
             latencies.append(latency)
-        
+
         avg_latency = sum(latencies) / len(latencies) if latencies else 0.0
-        return round(avg_latency, 4) # 4 decimal places
+        return round(avg_latency, 4)
 
     def _save_metadata(self, path: Path) -> None:
         """Save model metadata to JSON."""
