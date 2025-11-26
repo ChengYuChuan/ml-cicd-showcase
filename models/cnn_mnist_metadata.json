@@ -1,0 +1,19 @@
+{
+  "model_name": "TinyConvNet",
+  "config": {
+    "model_name": "TinyConvNet",
+    "input_size": 28,
+    "num_classes": 10,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "num_epochs": 3,
+    "device": "cpu"
+  },
+  "metrics": {
+    "accuracy": 0.9871,
+    "test_loss": 0.03870391302130003,
+    "parameter_count": 105866,
+    "model_size_mb": 0.4
+  },
+  "is_trained": true
+}
