@@ -64,3 +64,22 @@ train-cnn:
 
 train-rag:
 	python train.py --model rag
+
+serve:
+	python serve.py
+
+serve-dev:
+	uvicorn src.serving.app:app --reload --port 8000
+
+monitoring-up:
+	docker-compose up -d ml-api prometheus grafana
+	@echo "Services available at:"
+	@echo "  API: http://localhost:8000/docs"
+	@echo "  Prometheus: http://localhost:9090"
+	@echo "  Grafana: http://localhost:3000"
+
+monitoring-down:
+	docker-compose down
+
+traffic:
+	python scripts/generate_traffic.py

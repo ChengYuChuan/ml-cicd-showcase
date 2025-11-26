@@ -7,6 +7,34 @@
 
 A professional showcase project demonstrating **ML/MLOps skills** with a **unified CI/CD pipeline** for multiple model types.
 
+## 🆕 Monitoring with Prometheus & Grafana
+
+### Quick Start
+```bash
+# Start monitoring stack
+make monitoring-up
+
+# Access services
+open http://localhost:8000/docs    # API documentation
+open http://localhost:9090         # Prometheus
+open http://localhost:3000         # Grafana (admin/admin)
+
+# Generate test traffic
+python scripts/generate_traffic.py
+```
+
+### Architecture
+```
+ML API (FastAPI)
+    ↓ /metrics
+Prometheus (scraping)
+    ↓ queries
+Grafana (dashboards)
+```
+
+See [Monitoring Guide](monitoring/README.md) for details.
+
+
 ## 🎯 Project Overview
 
 This project demonstrates:

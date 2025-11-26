@@ -39,5 +39,57 @@ services:
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
 
+# ✨ 新增：ML API 服務
+  ml-api:
+    build:
+      context: .
+      target: production
+    container_name: ml-api
+    ports:
+      - "8000:8000"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    command: python serve.py
+    networks:
+      - ml-network
+
+  # ✨ 新增：Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    networks:
+      - ml-network
+    depends_on:
+      - ml-api
+
+  # ✨ 新增：Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    networks:
+      - ml-network
+    depends_on:
+      - prometheus
+
+networks:
+  ml-network:
+    driver: bridge
+
 volumes:
   ml-cache:
+  prometheus-data:
+  grafana-data:
