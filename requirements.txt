@@ -1,9 +1,16 @@
-# Core ML libraries (compatible versions)
+# Core ML libraries
 torch==2.2.0
 torchvision==0.17.0
+
+# Transformers and embeddings
 transformers==4.37.2
-sentence-transformers==2.2.2
-chromadb==0.4.18
+sentence-transformers==2.7.0
+huggingface-hub==0.20.0
+
+# Vector database
+chromadb==0.4.22
+
+# LLM API
 anthropic==0.7.8
 
 # Data processing

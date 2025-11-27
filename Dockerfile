@@ -9,19 +9,29 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
+# Copy requirements files
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements-monitoring.txt .
 
-# Copy source code
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-monitoring.txt
+
+# Copy source code and scripts
 COPY src/ ./src/
 COPY tests/ ./tests/
+COPY scripts/ ./scripts/
 COPY pyproject.toml .
+COPY serve.py .
+COPY train.py .
+
+# Create necessary directories
+RUN mkdir -p /app/models /app/logs /app/data
 
 # Set Python path
 ENV PYTHONPATH=/app
 
-# Default command
+# Default command (for base)
 CMD ["python", "-m", "pytest", "tests/", "-v"]
 
 # Development stage
@@ -30,8 +40,9 @@ COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 CMD ["/bin/bash"]
 
-# Production stage (minimal)
+# Production stage (API serving)
 FROM base as production
-# Only copy necessary files
-RUN pip install --no-cache-dir pytest
-CMD ["python", "-c", "from src.models.cnn_classifier import CNNClassifier; from src.models.rag_system import RAGSystem; print('ML models loaded successfully!')"]
+# Expose API port
+EXPOSE 8000
+# Run the API server
+CMD ["python", "serve.py"]
