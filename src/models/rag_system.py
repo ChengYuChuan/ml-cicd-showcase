@@ -21,16 +21,17 @@ class RAGSystem(BaseMLModel):
     - LLM: Claude via Anthropic API
     """
 
-    def __init__(self, config: Optional[RAGConfig] = None):
+    def __init__(self, config: Optional[RAGConfig] = None, mlflow_tracker=None):
         """
         Initialize RAG system.
 
         Args:
             config: RAGConfig object or None for defaults
+            mlflow_tracker: Optional MLflow tracker for experiment logging
         """
         if config is None:
             config = RAGConfig()
-        super().__init__(config)
+        super().__init__(config, mlflow_tracker=mlflow_tracker)
 
         # Initialize embedding model
         print("Loading embedding model...")

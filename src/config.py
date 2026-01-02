@@ -65,6 +65,27 @@ class RAGConfig:
         return cls(**{k: v for k, v in config_dict.items() if k in cls.__annotations__})
 
 
+@dataclass
+class MLflowConfig:
+    """Configuration for MLflow tracking."""
+
+    tracking_uri: str = "http://localhost:5000"
+    experiment_name: str = "ml-cicd-showcase"
+    registry_uri: str = "sqlite:///mlflow.db"
+    enabled: bool = True
+
+    def __post_init__(self):
+        """Load tracking URI from environment if available."""
+        env_uri = os.getenv("MLFLOW_TRACKING_URI")
+        if env_uri:
+            self.tracking_uri = env_uri
+
+    @classmethod
+    def from_dict(cls, config_dict: dict):
+        """Create config from dictionary."""
+        return cls(**{k: v for k, v in config_dict.items() if k in cls.__annotations__})
+
+
 def load_config(config_path: Optional[Path] = None) -> dict:
     """Load configuration from YAML file."""
     if config_path is None:

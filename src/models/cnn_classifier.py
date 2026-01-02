@@ -49,16 +49,17 @@ class TinyConvNet(nn.Module):
 class CNNClassifier(BaseMLModel):
     """CNN classifier with unified interface for CI/CD."""
 
-    def __init__(self, config: Optional[CNNConfig] = None):
+    def __init__(self, config: Optional[CNNConfig] = None, mlflow_tracker=None):
         """
         Initialize CNN classifier.
 
         Args:
             config: CNNConfig object or None for defaults
+            mlflow_tracker: Optional MLflow tracker for experiment logging
         """
         if config is None:
             config = CNNConfig()
-        super().__init__(config)
+        super().__init__(config, mlflow_tracker=mlflow_tracker)
 
         # Set device
         if config.device == "auto":
@@ -157,6 +158,11 @@ class CNNClassifier(BaseMLModel):
             avg_loss = epoch_loss / len(train_loader) if train_loader else 0.0
             train_acc = correct / total
             print(f"Epoch {epoch+1}: Loss={avg_loss:.4f}, Accuracy={train_acc:.4f}")
+
+            # Log epoch metrics to MLflow if tracker is available
+            self.log_epoch_metrics(
+                {"epoch_loss": avg_loss, "epoch_accuracy": train_acc}, epoch=epoch
+            )
 
         self._is_trained = True
 

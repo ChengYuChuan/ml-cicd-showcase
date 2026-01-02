@@ -1,18 +1,40 @@
-.PHONY: help install install-dev test test-fast test-cov lint format clean docker-build docker-test train
+.PHONY: help install install-dev test test-fast test-cov lint format clean docker-build docker-test train mlflow-up mlflow-down train-mlflow demo
 
 help:
 	@echo "Available commands:"
+	@echo ""
+	@echo "Setup & Dependencies:"
 	@echo "  make install       - Install production dependencies"
 	@echo "  make install-dev   - Install development dependencies"
+	@echo ""
+	@echo "Testing & Quality:"
 	@echo "  make test          - Run all tests"
 	@echo "  make test-fast     - Run fast tests only"
 	@echo "  make test-cov      - Run tests with coverage"
 	@echo "  make lint          - Run linting"
 	@echo "  make format        - Format code"
-	@echo "  make clean         - Clean temporary files"
+	@echo ""
+	@echo "Training:"
+	@echo "  make train         - Train models"
+	@echo "  make train-mlflow  - Train models with MLflow tracking"
+	@echo ""
+	@echo "Services:"
+	@echo "  make serve         - Start API server locally"
+	@echo "  make mlflow-up     - Start MLflow server"
+	@echo "  make all-up        - Start all services (API + Monitoring + MLflow)"
+	@echo "  make all-down      - Stop all services"
+	@echo ""
+	@echo "Demo:"
+	@echo "  make demo          - Run full interactive demo"
+	@echo "  make demo-quick    - Run quick demo (services only)"
+	@echo ""
+	@echo "Docker:"
 	@echo "  make docker-build  - Build Docker image"
 	@echo "  make docker-test   - Run tests in Docker"
-	@echo "  make train         - Train models"
+	@echo ""
+	@echo "Utilities:"
+	@echo "  make traffic       - Generate test traffic"
+	@echo "  make clean         - Clean temporary files"
 
 install:
 	pip install -r requirements.txt
@@ -83,3 +105,48 @@ monitoring-down:
 
 traffic:
 	python scripts/generate_traffic.py
+
+# MLflow commands
+mlflow-up:
+	docker-compose up -d mlflow
+	@echo "MLflow server starting..."
+	@sleep 3
+	@echo "MLflow UI available at: http://localhost:5000"
+
+mlflow-down:
+	docker-compose stop mlflow
+
+train-mlflow:
+	python train.py --model cnn --mlflow
+
+train-mlflow-register:
+	python train.py --model cnn --mlflow --register
+
+# Start all services
+all-up:
+	docker-compose up -d mlflow ml-api prometheus grafana
+	@echo ""
+	@echo "All services starting..."
+	@sleep 5
+	@echo ""
+	@echo "Services available at:"
+	@echo "  MLflow:     http://localhost:5000"
+	@echo "  API:        http://localhost:8000/docs"
+	@echo "  Prometheus: http://localhost:9090"
+	@echo "  Grafana:    http://localhost:3000 (admin/admin)"
+
+all-down:
+	docker-compose down
+
+# Demo commands
+demo:
+	@chmod +x scripts/demo.sh
+	./scripts/demo.sh all
+
+demo-quick:
+	@chmod +x scripts/demo.sh
+	./scripts/demo.sh services
+
+demo-cleanup:
+	@chmod +x scripts/demo.sh
+	./scripts/demo.sh cleanup
